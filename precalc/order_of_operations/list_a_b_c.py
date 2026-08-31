@@ -22,12 +22,12 @@ class PracticeProblemsList(Slide):
         
         # Problem B
         label_b = MathTex(r"\textbf{b)}", font_size=44)
-        prob_b = MathTex(r"12 - \left[ -4 + 2 \left[ (2 - 5)^2 - 7 \right] \right]", font_size=44)
+        prob_b = MathTex(r"15 - \left[ -4 + 2 \left[ (2 - 5)^2 - 4 \right] \right]", font_size=44)
         group_b = VGroup(label_b, prob_b).arrange(RIGHT, buff=0.5)
         
         # Problem C
         label_c = MathTex(r"\textbf{c)}", font_size=44)
-        prob_c = MathTex(r"15 - \left[ 3(2y+1) - 4(y-3) \right] - 6", font_size=44)
+        prob_c = MathTex(r"12 - \left[ 3(2y+5) - 4(y-3) \right] - 5", font_size=44)
         group_c = VGroup(label_c, prob_c).arrange(RIGHT, buff=0.5)
 
         # Arrange all problems vertically
