@@ -97,6 +97,23 @@ class DistributionTemplate:
         self.next_slide()
         return term
 
+    def rewrite_line(self, new_line):
+        """Transform the current line in place into new_line, at the same
+        stack slot (no new row added) -- e.g. rewriting "-(x+1)" as
+        "-1(x+1)" to expose the "invisible" coefficient before distributing."""
+        new_line.scale(self._current_scale)
+        new_line.move_to(self._current_line, aligned_edge=LEFT)
+
+        self.play(TransformMatchingTex(self._current_line, new_line))
+
+        self._stack.remove(self._current_line)
+        self._stack.add(new_line)
+        self._current_line = new_line
+        self._top_left = new_line.get_corner(UL)
+
+        self.next_slide()
+        return new_line
+
     def finish_line(self, terms):
         """Group the completed line's terms, add it to the stack, and shrink
         the whole stack (about its fixed top-left corner) if it would
@@ -114,6 +131,51 @@ class DistributionTemplate:
 
         self._current_line = line
         return line
+
+    def write_inverse(self, targets, inverse_text, color=RED, buff=0.3):
+        """Write inverse_text (e.g. the additive inverse of a term) directly
+        below each mobject in `targets`, in one simultaneous move -- this is
+        "add/subtract the same thing on both sides." Returns the new
+        mobjects, in the same order as `targets`."""
+        inverses = []
+        for target in targets:
+            inv = MathTex(inverse_text, color=color)
+            inv.scale(self._current_scale)
+            inv.next_to(target, DOWN, buff=buff)
+            inverses.append(inv)
+
+        self.play(*[Write(inv) for inv in inverses])
+        self.next_slide()
+        return inverses
+
+    def strike_pair(self, top, bottom):
+        """Draw a strikethrough line through `top` and the additive-inverse
+        term written below it (they cancel to zero), then fade both away."""
+        group = VGroup(top, bottom)
+        line = Line(
+            group.get_corner(UL) + UP * 0.08 + LEFT * 0.08,
+            group.get_corner(DR) + DOWN * 0.08 + RIGHT * 0.08,
+            color=GRAY,
+            stroke_width=6,
+        )
+        self.play(Create(line))
+        self.next_slide()
+        self.play(FadeOut(group), FadeOut(line))
+        # FadeOut only animates opacity -- since these mobjects stay nested
+        # inside the permanent stack (for later rescales), pin opacity to 0
+        # for good, or they'd pop back to full opacity on the next rescale.
+        group.set_opacity(0)
+        line.set_opacity(0)
+        self.next_slide()
+
+    def extend_current_line(self, *extra):
+        """Fold extra mobjects (a surviving additive-inverse annotation left
+        under the current line) into the stack -- so a later rescale moves
+        them too -- and into the current-line reference, so the next
+        stacked row is placed below them instead of overlapping them."""
+        for mob in extra:
+            self._stack.add(mob)
+        self._current_line = VGroup(self._current_line, *extra)
 
     def box_final(self, mobject):
         self.play(Circumscribe(mobject, color=ANSWER_COLOR))
