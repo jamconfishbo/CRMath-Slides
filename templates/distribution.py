@@ -150,7 +150,10 @@ class DistributionTemplate:
 
     def strike_pair(self, top, bottom):
         """Draw a strikethrough line through `top` and the additive-inverse
-        term written below it (they cancel to zero), then fade both away."""
+        term written below it (they cancel to zero). Both stay fully
+        visible, struck through, as a permanent record -- pass the
+        returned line (and top/bottom, if not already tracked) to
+        extend_current_line so the next row doesn't overlap them."""
         group = VGroup(top, bottom)
         line = Line(
             group.get_corner(UL) + UP * 0.08 + LEFT * 0.08,
@@ -160,13 +163,7 @@ class DistributionTemplate:
         )
         self.play(Create(line))
         self.next_slide()
-        self.play(FadeOut(group), FadeOut(line))
-        # FadeOut only animates opacity -- since these mobjects stay nested
-        # inside the permanent stack (for later rescales), pin opacity to 0
-        # for good, or they'd pop back to full opacity on the next rescale.
-        group.set_opacity(0)
-        line.set_opacity(0)
-        self.next_slide()
+        return line
 
     def extend_current_line(self, *extra):
         """Fold extra mobjects (a surviving additive-inverse annotation left

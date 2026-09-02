@@ -50,8 +50,9 @@ class Example2LinearEquations(Slide, DistributionTemplate):
 
         # --- get variables on one side: add the additive inverse of 6x to both sides ---
         inv_lhs, inv_rhs = self.write_inverse([d1, d3], r"-6x", color=INVERSE_COLOR)
-        self.strike_pair(d1, inv_lhs)
-        self.strike_pair(d3, inv_rhs)
+        strike_lhs = self.strike_pair(d1, inv_lhs)
+        strike_rhs = self.strike_pair(d3, inv_rhs)
+        self.extend_current_line(inv_lhs, inv_rhs, strike_lhs, strike_rhs)
 
         n1 = self.reveal_term(r"-3", after=None, source=d2, indicate=False)
         n_eq = self.reveal_term(r"=", after=n1, indicate=False)
@@ -65,6 +66,7 @@ class Example2LinearEquations(Slide, DistributionTemplate):
         result = Text("No Solution (Contradiction)", font_size=36, weight=BOLD, color=NO_SOLUTION_COLOR)
         result.next_to(final, DOWN, buff=0.4, aligned_edge=LEFT)
         self.play(FadeIn(result, shift=UP * 0.2))
+        self.finish_line([result])
         self.next_slide()
 
     def solve_b(self):
@@ -106,8 +108,9 @@ class Example2LinearEquations(Slide, DistributionTemplate):
 
         # --- get variables on one side: add the additive inverse of 6x to both sides ---
         inv_lhs, inv_rhs = self.write_inverse([c1, c3], r"-6x", color=INVERSE_COLOR)
-        self.strike_pair(c1, inv_lhs)
-        self.strike_pair(c3, inv_rhs)
+        strike_lhs = self.strike_pair(c1, inv_lhs)
+        strike_rhs = self.strike_pair(c3, inv_rhs)
+        self.extend_current_line(inv_lhs, inv_rhs, strike_lhs, strike_rhs)
 
         n1 = self.reveal_term(r"-3", after=None, source=c2, indicate=False)
         n_eq = self.reveal_term(r"=", after=n1, indicate=False)
@@ -121,4 +124,5 @@ class Example2LinearEquations(Slide, DistributionTemplate):
         result = Text("Infinitely Many Solutions (Identity)", font_size=36, weight=BOLD, color=INFINITE_COLOR)
         result.next_to(final, DOWN, buff=0.4, aligned_edge=LEFT)
         self.play(FadeIn(result, shift=UP * 0.2))
+        self.finish_line([result])
         self.next_slide()

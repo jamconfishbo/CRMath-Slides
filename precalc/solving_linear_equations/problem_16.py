@@ -61,8 +61,8 @@ class Problem16LinearEquation(Slide, WorkedExampleTemplate, DistributionTemplate
 
         # --- get variables on one side: add the additive inverse of 4y to both sides ---
         inv_lhs, inv_rhs = self.write_inverse([t4y, t9y], r"-4y", color=INVERSE_COLOR)
-        self.strike_pair(t4y, inv_lhs)
-        self.extend_current_line(inv_rhs)
+        strike1 = self.strike_pair(t4y, inv_lhs)
+        self.extend_current_line(inv_lhs, inv_rhs, strike1)
 
         m1 = self.reveal_term(r"-12", after=None, source=neg12_parts[0], indicate=False)
         m_eq = self.reveal_term(r"=", after=m1, indicate=False)
@@ -73,8 +73,8 @@ class Problem16LinearEquation(Slide, WorkedExampleTemplate, DistributionTemplate
 
         # --- get constants on one side: add the additive inverse of -12 to both sides ---
         inv2_lhs, inv2_rhs = self.write_inverse([m1, m3], r"+12", color=INVERSE_COLOR)
-        self.strike_pair(m3, inv2_rhs)
-        self.extend_current_line(inv2_lhs)
+        strike2 = self.strike_pair(m3, inv2_rhs)
+        self.extend_current_line(inv2_lhs, inv2_rhs, strike2)
 
         q1 = self.reveal_term(r"0", after=None, source=[m1, inv2_lhs])
         q_eq = self.reveal_term(r"=", after=q1, indicate=False)
@@ -93,4 +93,5 @@ class Problem16LinearEquation(Slide, WorkedExampleTemplate, DistributionTemplate
         result = Text("One Solution", font_size=36, weight=BOLD, color=ANSWER_COLOR)
         result.next_to(VGroup(r1, r_eq, r2), DOWN, buff=0.4, aligned_edge=LEFT)
         self.play(FadeIn(result, shift=UP * 0.2))
+        self.finish_line([result])
         self.next_slide()

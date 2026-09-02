@@ -57,8 +57,8 @@ class Example1LinearEquation(Slide, DistributionTemplate):
 
         # --- get variables on one side: add the additive inverse of the right side's w ---
         inv_lhs, inv_rhs = self.write_inverse([c1, c4], r"+1w", color=INVERSE_COLOR)
-        self.strike_pair(c4, inv_rhs)
-        self.extend_current_line(inv_lhs)
+        strike1 = self.strike_pair(c4, inv_rhs)
+        self.extend_current_line(inv_lhs, inv_rhs, strike1)
 
         v1 = self.reveal_term(r"-2w", after=None, source=[c1, inv_lhs], color=VAR_COLOR)
         v2 = self.reveal_term(r"+17", after=v1, source=c2, indicate=False)
@@ -69,8 +69,8 @@ class Example1LinearEquation(Slide, DistributionTemplate):
 
         # --- get constants on one side: add the additive inverse of the left side's 17 ---
         inv2_lhs, inv2_rhs = self.write_inverse([v2, v3], r"-17", color=INVERSE_COLOR)
-        self.strike_pair(v2, inv2_lhs)
-        self.extend_current_line(inv2_rhs)
+        strike2 = self.strike_pair(v2, inv2_lhs)
+        self.extend_current_line(inv2_lhs, inv2_rhs, strike2)
 
         k1 = self.reveal_term(r"-2w", after=None, source=v1, indicate=False, color=VAR_COLOR)
         k_eq = self.reveal_term(r"=", after=k1, indicate=False)
@@ -89,4 +89,5 @@ class Example1LinearEquation(Slide, DistributionTemplate):
         result = Text("One Solution", font_size=36, weight=BOLD, color=ANSWER_COLOR)
         result.next_to(VGroup(f1, f_eq, f2), DOWN, buff=0.4, aligned_edge=LEFT)
         self.play(FadeIn(result, shift=UP * 0.2))
+        self.finish_line([result])
         self.next_slide()

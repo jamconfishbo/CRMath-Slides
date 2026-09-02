@@ -64,8 +64,8 @@ class Problem15LinearEquation(Slide, WorkedExampleTemplate, DistributionTemplate
 
         # --- get variables on one side: add the additive inverse of -8x to both sides ---
         inv_lhs, inv_rhs = self.write_inverse([t10x, t_neg8x], r"+8x", color=INVERSE_COLOR)
-        self.strike_pair(t_neg8x, inv_rhs)
-        self.extend_current_line(inv_lhs)
+        strike1 = self.strike_pair(t_neg8x, inv_rhs)
+        self.extend_current_line(inv_lhs, inv_rhs, strike1)
 
         m1 = self.reveal_term(r"18x", after=None, source=[t10x, inv_lhs], color=VAR_COLOR)
         m2 = self.reveal_term(r"-12", after=m1, source=t_neg12, indicate=False)
@@ -76,8 +76,8 @@ class Problem15LinearEquation(Slide, WorkedExampleTemplate, DistributionTemplate
 
         # --- get constants on one side: add the additive inverse of -12 to both sides ---
         inv2_lhs, inv2_rhs = self.write_inverse([m2, m3], r"+12", color=INVERSE_COLOR)
-        self.strike_pair(m2, inv2_lhs)
-        self.extend_current_line(inv2_rhs)
+        strike2 = self.strike_pair(m2, inv2_lhs)
+        self.extend_current_line(inv2_lhs, inv2_rhs, strike2)
 
         q1 = self.reveal_term(r"18x", after=None, source=m1, indicate=False, color=VAR_COLOR)
         q_eq = self.reveal_term(r"=", after=q1, indicate=False)
@@ -96,4 +96,5 @@ class Problem15LinearEquation(Slide, WorkedExampleTemplate, DistributionTemplate
         result = Text("One Solution", font_size=36, weight=BOLD, color=ANSWER_COLOR)
         result.next_to(VGroup(r1, r_eq, r2), DOWN, buff=0.4, aligned_edge=LEFT)
         self.play(FadeIn(result, shift=UP * 0.2))
+        self.finish_line([result])
         self.next_slide()
