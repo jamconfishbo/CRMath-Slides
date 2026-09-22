@@ -13,6 +13,20 @@ MARK_H = 0.3        # height of one tally stroke
 GROUP_GAP = 0.18    # extra gap between groups of 5
 
 
+def bucket_by_boundaries(values, boundaries):
+    """values bucketed into half-open [lo, hi) class-boundary intervals.
+    Returns a list of row indices, one per value, in the same order."""
+    row_indices = []
+    for v in values:
+        for i, (lo, hi) in enumerate(boundaries):
+            if lo <= v < hi:
+                row_indices.append(i)
+                break
+        else:
+            raise ValueError(f"{v} does not fall in any boundary interval")
+    return row_indices
+
+
 class FrequencyTableTemplate:
     """Mixin for "raw data -> tally -> frequency/percent" one-way frequency
     table builds.
@@ -181,7 +195,112 @@ class FrequencyTableTemplate:
         self.next_slide()
         return f, p
 
-    def show_timer(self, seconds, position=None):
+    def build_table_grid(self, class_labels, header_labels, col_x, row_y, font_size=24, label_font_size=24):
+        """
+        Generic n-column table builder (n = len(col_x) - 1), for tables whose
+        column meanings vary from the fixed Class/Tally/Freq/Percent layout
+        of build_table_skeleton() -- e.g. Class Limits | Class Boundaries |
+        Tally | Frequency (no percent column). Column 0 is always the class
+        label. Returns each other column's per-row left-edge and center
+        point (plus the total row's), so the caller wires up whichever
+        column holds tallies / boundaries / frequency for this table.
+        """
+        n_cols = len(col_x) - 1
+        lines = VGroup()
+        for x in col_x:
+            lines.add(Line([x, row_y[0], 0], [x, row_y[-1], 0], color=GRID_COLOR, stroke_width=2))
+        for y in row_y:
+            lines.add(Line([col_x[0], y, 0], [col_x[-1], y, 0], color=GRID_COLOR, stroke_width=2))
+
+        header_y = (row_y[0] + row_y[1]) / 2
+        headers = VGroup()
+        col_centers = [(col_x[i] + col_x[i + 1]) / 2 for i in range(n_cols)]
+        col_widths = [col_x[i + 1] - col_x[i] for i in range(n_cols)]
+        for label, cx, cw in zip(header_labels, col_centers, col_widths):
+            h = Text(label, font_size=label_font_size, weight=BOLD)
+            if h.width > cw - 0.1:
+                h.scale_to_fit_width(cw - 0.1)
+            h.move_to([cx, header_y, 0])
+            headers.add(h)
+
+        class_texts = VGroup()
+        col_left = [[] for _ in range(n_cols)]
+        col_center = [[] for _ in range(n_cols)]
+        for i, label in enumerate(class_labels):
+            y_top, y_bot = row_y[i + 1], row_y[i + 2]
+            y_c = (y_top + y_bot) / 2
+            lbl = Text(label, font_size=font_size)
+            if lbl.width > col_widths[0] - 0.15:
+                lbl.scale_to_fit_width(col_widths[0] - 0.15)
+            lbl.move_to([col_centers[0], y_c, 0])
+            class_texts.add(lbl)
+            for c in range(n_cols):
+                col_left[c].append(np.array([col_x[c] + 0.15, y_c, 0]))
+                col_center[c].append(np.array([col_centers[c], y_c, 0]))
+
+        total_y = (row_y[-2] + row_y[-1]) / 2
+        total_label = Text("Total", font_size=font_size, weight=BOLD)
+        total_label.move_to([col_centers[0], total_y, 0])
+        total_left = [np.array([col_x[c] + 0.15, total_y, 0]) for c in range(n_cols)]
+        total_center = [np.array([col_centers[c], total_y, 0]) for c in range(n_cols)]
+
+        self.play(Create(lines), FadeIn(headers), FadeIn(class_texts), FadeIn(total_label))
+        self.next_slide()
+
+        return {
+            "lines": lines,
+            "headers": headers,
+            "class_texts": class_texts,
+            "total_label": total_label,
+            "col_left": col_left,
+            "col_center": col_center,
+            "total_left": total_left,
+            "total_center": total_center,
+            "total_y": total_y,
+        }
+
+    def reveal_boundaries(self, left_points, lower_strs, upper_strs, font_size=24, color=WHITE, dash=" - "):
+        """Class-boundaries column, revealed column-major and with no
+        arithmetic shown: every row's lower boundary first (one click each),
+        then every row's upper boundary (one click each), appended after
+        its row's lower value so the cell reads "lower - upper"."""
+        lowers = []
+        for pt, s in zip(left_points, lower_strs):
+            m = Text(s, font_size=font_size, color=color)
+            m.move_to(pt, aligned_edge=LEFT)
+            self.play(FadeIn(m))
+            self.next_slide()
+            lowers.append(m)
+
+        uppers = []
+        for lower_mob, s in zip(lowers, upper_strs):
+            m = Text(f"{dash}{s}", font_size=font_size, color=color)
+            m.next_to(lower_mob, RIGHT, buff=0.03)
+            self.play(FadeIn(m))
+            self.next_slide()
+            uppers.append(m)
+
+        return lowers, uppers
+
+    def reveal_column(self, points, strs, font_size=24, color=ANSWER_COLOR, last_bold=False):
+        """Reveal one column's values, one row per click (column-major
+        table-filling order: call this once per column, in the order the
+        columns should be completed). Set last_bold=True when the last
+        entry is a total row, to bold it and flash a Circumscribe."""
+        mobs = []
+        n = len(points)
+        for i, (pt, s) in enumerate(zip(points, strs)):
+            bold = last_bold and i == n - 1
+            m = Text(s, font_size=font_size, color=color, weight=BOLD if bold else NORMAL)
+            m.move_to(pt)
+            self.play(FadeIn(m, shift=UP * 0.1))
+            if bold:
+                self.play(Circumscribe(m, color=color))
+            self.next_slide()
+            mobs.append(m)
+        return mobs
+
+    def show_timer(self, seconds, position=None, font_size=40, bar_height=3.5):
         """A countdown timer + draining bar, for independent-practice slides.
         Mirrors the pattern used in precalc/solving_linear_equations/practice_list.py."""
         time_tracker = ValueTracker(seconds)
@@ -193,12 +312,16 @@ class FrequencyTableTemplate:
         anchor = position if position is not None else np.array([6.0, 3.0, 0])
 
         timer_text = always_redraw(
-            lambda: Text(get_time_string(time_tracker.get_value()), font="monospace", font_size=40).move_to(anchor)
+            lambda: Text(
+                get_time_string(time_tracker.get_value()), font="monospace", font_size=font_size
+            ).move_to(anchor)
         )
-        bar_bg = Rectangle(height=3.5, width=0.4, color=GRAY, fill_opacity=0.3).next_to(timer_text, DOWN, buff=0.35)
+        bar_bg = Rectangle(height=bar_height, width=0.4, color=GRAY, fill_opacity=0.3).next_to(
+            timer_text, DOWN, buff=0.35
+        )
         bar = always_redraw(
             lambda: Rectangle(
-                height=3.5 * (time_tracker.get_value() / seconds),
+                height=bar_height * (time_tracker.get_value() / seconds),
                 width=0.4,
                 color=BLUE,
                 fill_opacity=0.8,
