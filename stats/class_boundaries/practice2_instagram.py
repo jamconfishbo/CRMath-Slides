@@ -16,19 +16,19 @@ RAW_DATA_TARGET = np.array([-3.0, 0.9, 0])
 RAW_DATA_WIDTH = 4.0
 TIMER_POSITION = np.array([-6.3, 2.3, 0])
 
-# Table A: k = 2 -- too few bins
-A_LABELS = ["1.2 - 6.1", "6.2 - 11.1"]
-A_LOWER = ["1.15", "6.15"]
-A_UPPER = ["6.15", "11.15"]
-A_BOUNDARIES = [(1.15, 6.15), (6.15, 11.15)]
+# Table A: k = 2 -- too few bins. Start at a convenient integer <= min (1.2) -> 1.
+A_LABELS = ["1 - 5", "6 - 10"]
+A_LOWER = ["0.5", "5.5"]
+A_UPPER = ["5.5", "10.5"]
+A_BOUNDARIES = [(0.5, 5.5), (5.5, 10.5)]
 A_TOP_Y, A_ROW_H = 2.5, 0.6
 A_ROW_Y = [A_TOP_Y - i * A_ROW_H for i in range(5)]
 
-# Table B: k = 5 -- appropriate number of bins
-B_LABELS = ["1.2 - 3.1", "3.2 - 5.1", "5.2 - 7.1", "7.2 - 9.1", "9.2 - 11.1"]
-B_LOWER = ["1.15", "3.15", "5.15", "7.15", "9.15"]
-B_UPPER = ["3.15", "5.15", "7.15", "9.15", "11.15"]
-B_BOUNDARIES = [(1.15, 3.15), (3.15, 5.15), (5.15, 7.15), (7.15, 9.15), (9.15, 11.15)]
+# Table B: k = 5 -- appropriate number of bins. Same integer start = 1.
+B_LABELS = ["1 - 2", "3 - 4", "5 - 6", "7 - 8", "9 - 10"]
+B_LOWER = ["0.5", "2.5", "4.5", "6.5", "8.5"]
+B_UPPER = ["2.5", "4.5", "6.5", "8.5", "10.5"]
+B_BOUNDARIES = [(0.5, 2.5), (2.5, 4.5), (4.5, 6.5), (6.5, 8.5), (8.5, 10.5)]
 B_TOP_Y, B_ROW_H = 2.6, 0.6
 B_ROW_Y = [B_TOP_Y - i * B_ROW_H for i in range(8)]
 
@@ -85,6 +85,14 @@ class Practice2Instagram(Slide, FrequencyTableTemplate):
         self.play(Write(width_line))
         self.next_slide()
 
+        start_line = MathTex(
+            r"\text{Start at a convenient integer} \leq \text{min (1.2)} \rightarrow \text{Start} = 1",
+            font_size=26,
+        )
+        start_line.move_to(np.array([-3.0, 2.0, 0]))
+        self.play(Write(start_line))
+        self.next_slide()
+
         table = self.build_table_grid(["", ""], HEADERS, COL_X, A_ROW_Y, font_size=22, label_font_size=20)
 
         self.reveal_column(table["col_center"][0], A_LABELS, font_size=22, color=WHITE)
@@ -113,11 +121,12 @@ class Practice2Instagram(Slide, FrequencyTableTemplate):
             line_spacing=1.2,
         )
         a = Text(
-            "Not easy at all -- with only 2 broad bins, the entire 4.0-6.0\n"
-            "range is buried inside one giant class (1.2-6.1, f = 13) along\n"
-            "with everyone else from 1.2 up to 6.1. There is no way to\n"
-            "isolate the 4.0-6.0 range from the table alone.\n"
-            "Too few bins hides the very detail you're trying to find.",
+            "Not easy at all -- 4.0 to 6.0 is split across both classes\n"
+            "(1-5, boundary up to 5.5, and 6-10). With only 2 broad bins\n"
+            "you can only see that 11 students fall somewhere below 5.5\n"
+            "and 9 fall above -- there is no way to isolate the 4.0-6.0\n"
+            "range from the table alone. Too few bins hides the very\n"
+            "detail you're trying to find.",
             font_size=26,
             line_spacing=1.25,
             color=YELLOW,
@@ -158,6 +167,14 @@ class Practice2Instagram(Slide, FrequencyTableTemplate):
         self.play(Write(width_line))
         self.next_slide()
 
+        start_line = MathTex(
+            r"\text{Start at a convenient integer} \leq \text{min (1.2)} \rightarrow \text{Start} = 1",
+            font_size=24,
+        )
+        start_line.move_to(np.array([-3.0, 2.5, 0]))
+        self.play(Write(start_line))
+        self.next_slide()
+
         table = self.build_table_grid(
             ["", "", "", "", ""], HEADERS, COL_X, B_ROW_Y, font_size=20, label_font_size=18,
         )
@@ -184,7 +201,7 @@ class Practice2Instagram(Slide, FrequencyTableTemplate):
         qa = VGroup(
             Text("a) What is the modal class in Table B?", font_size=28),
             Text(
-                "Tie: 1.2-3.1 and 3.2-5.1 both have the highest frequency (f = 5)",
+                "Tie: 3 - 4 and 5 - 6 both have the highest frequency (f = 5)",
                 font_size=26, weight=BOLD, color=YELLOW,
             ),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.3)
