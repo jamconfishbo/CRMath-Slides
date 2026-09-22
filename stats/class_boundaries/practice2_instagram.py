@@ -17,18 +17,18 @@ RAW_DATA_WIDTH = 4.0
 TIMER_POSITION = np.array([-6.3, 2.3, 0])
 
 # Table A: k = 2 -- too few bins
-A_LABELS = ["1.2 - 5.5", "5.6 - 9.9"]
-A_LOWER = ["1.15", "5.55"]
-A_UPPER = ["5.55", "9.95"]
-A_BOUNDARIES = [(1.15, 5.55), (5.55, 9.95)]
+A_LABELS = ["1.2 - 6.1", "6.2 - 11.1"]
+A_LOWER = ["1.15", "6.15"]
+A_UPPER = ["6.15", "11.15"]
+A_BOUNDARIES = [(1.15, 6.15), (6.15, 11.15)]
 A_TOP_Y, A_ROW_H = 2.5, 0.6
 A_ROW_Y = [A_TOP_Y - i * A_ROW_H for i in range(5)]
 
 # Table B: k = 5 -- appropriate number of bins
-B_LABELS = ["1.2 - 2.9", "3.0 - 4.7", "4.8 - 6.5", "6.6 - 8.3", "8.4 - 10.1"]
-B_LOWER = ["1.15", "2.95", "4.75", "6.55", "8.35"]
-B_UPPER = ["2.95", "4.75", "6.55", "8.35", "10.15"]
-B_BOUNDARIES = [(1.15, 2.95), (2.95, 4.75), (4.75, 6.55), (6.55, 8.35), (8.35, 10.15)]
+B_LABELS = ["1.2 - 3.1", "3.2 - 5.1", "5.2 - 7.1", "7.2 - 9.1", "9.2 - 11.1"]
+B_LOWER = ["1.15", "3.15", "5.15", "7.15", "9.15"]
+B_UPPER = ["3.15", "5.15", "7.15", "9.15", "11.15"]
+B_BOUNDARIES = [(1.15, 3.15), (3.15, 5.15), (5.15, 7.15), (7.15, 9.15), (9.15, 11.15)]
 B_TOP_Y, B_ROW_H = 2.6, 0.6
 B_ROW_Y = [B_TOP_Y - i * B_ROW_H for i in range(8)]
 
@@ -78,7 +78,7 @@ class Practice2Instagram(Slide, FrequencyTableTemplate):
         self.next_slide()
 
         width_line = MathTex(
-            r"\text{Width} = \frac{8.7}{2} = 4.35 \rightarrow \text{round UP to } 4.4",
+            r"\text{Width} = \frac{8.7}{2} = 4.35 \rightarrow \text{round UP to } 5",
             font_size=28,
         )
         width_line.move_to(np.array([-3.0, 2.45, 0]))
@@ -113,10 +113,10 @@ class Practice2Instagram(Slide, FrequencyTableTemplate):
             line_spacing=1.2,
         )
         a = Text(
-            "Not easy at all -- 4.0 to 6.0 is split across both classes\n"
-            "(1.2-5.5 and 5.6-9.9). With only 2 broad bins you can only see\n"
-            "that 11 students fall somewhere below 5.55 and 9 fall above --\n"
-            "there is no way to isolate the 4.0-6.0 range from the table alone.\n"
+            "Not easy at all -- with only 2 broad bins, the entire 4.0-6.0\n"
+            "range is buried inside one giant class (1.2-6.1, f = 13) along\n"
+            "with everyone else from 1.2 up to 6.1. There is no way to\n"
+            "isolate the 4.0-6.0 range from the table alone.\n"
             "Too few bins hides the very detail you're trying to find.",
             font_size=26,
             line_spacing=1.25,
@@ -151,7 +151,7 @@ class Practice2Instagram(Slide, FrequencyTableTemplate):
         self.shrink_raw_data(data_mobs, target_point=RAW_DATA_TARGET, width=RAW_DATA_WIDTH)
 
         width_line = MathTex(
-            r"\text{Width} = \frac{8.7}{5} = 1.74 \rightarrow \text{round UP to } 1.8",
+            r"\text{Width} = \frac{8.7}{5} = 1.74 \rightarrow \text{round UP to } 2",
             font_size=26,
         )
         width_line.move_to(np.array([-3.0, 2.9, 0]))
@@ -183,7 +183,10 @@ class Practice2Instagram(Slide, FrequencyTableTemplate):
 
         qa = VGroup(
             Text("a) What is the modal class in Table B?", font_size=28),
-            Text("3.0 - 4.7 thousand has the highest frequency (f = 5)", font_size=28, weight=BOLD, color=YELLOW),
+            Text(
+                "Tie: 1.2-3.1 and 3.2-5.1 both have the highest frequency (f = 5)",
+                font_size=26, weight=BOLD, color=YELLOW,
+            ),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.3)
 
         qb = VGroup(

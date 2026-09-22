@@ -6,10 +6,10 @@ from templates.frequency_table import FrequencyTableTemplate, bucket_by_boundari
 
 SCREEN = [1.5, 2.2, 2.8, 3.1, 3.9, 4.2, 4.5, 5.0, 5.8, 6.4]
 
-CLASS_LABELS = ["1.5 - 3.1", "3.2 - 4.8", "4.9 - 6.5"]
-LOWER = ["1.45", "3.15", "4.85"]
-UPPER = ["3.15", "4.85", "6.55"]
-BOUNDARIES = [(1.45, 3.15), (3.15, 4.85), (4.85, 6.55)]
+CLASS_LABELS = ["1.5 - 3.4", "3.5 - 5.4", "5.5 - 7.4"]
+LOWER = ["1.45", "3.45", "5.45"]
+UPPER = ["3.45", "5.45", "7.45"]
+BOUNDARIES = [(1.45, 3.45), (3.45, 5.45), (5.45, 7.45)]
 
 HEADERS = ["Class Limits", "Class Boundaries", "Tally", "Frequency (f)"]
 COL_X = [0.3, 1.6, 3.6, 5.8, 6.9]
@@ -40,7 +40,7 @@ class Example2ScreenTime(Slide, FrequencyTableTemplate):
         self.next_slide()
 
         width_line = MathTex(
-            r"\text{Width} = \frac{4.9}{3} \approx 1.63 \rightarrow \text{round UP to } 1.7",
+            r"\text{Width} = \frac{4.9}{3} \approx 1.63 \rightarrow \text{round UP to } 2",
             font_size=30,
         )
         width_line.move_to(np.array([-3.3, 2.45, 0]))
