@@ -132,16 +132,22 @@ class DistributionTemplate:
         self._current_line = line
         return line
 
-    def write_inverse(self, targets, inverse_text, color=RED, buff=0.3):
+    def write_inverse(self, targets, inverse_text, color=RED, buff=0.3, shifts=None):
         """Write inverse_text (e.g. the additive inverse of a term) directly
         below each mobject in `targets`, in one simultaneous move -- this is
         "add/subtract the same thing on both sides." Returns the new
-        mobjects, in the same order as `targets`."""
+        mobjects, in the same order as `targets`.
+
+        shifts: optional list of extra offsets (one per target, e.g. LEFT*0.5)
+        to nudge each annotation apart when the targets sit close together
+        and a long inverse_text would otherwise overlap its neighbor."""
         inverses = []
-        for target in targets:
+        for i, target in enumerate(targets):
             inv = MathTex(inverse_text, color=color)
             inv.scale(self._current_scale)
             inv.next_to(target, DOWN, buff=buff)
+            if shifts is not None:
+                inv.shift(shifts[i])
             inverses.append(inv)
 
         self.play(*[Write(inv) for inv in inverses])

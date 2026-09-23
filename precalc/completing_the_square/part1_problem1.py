@@ -61,8 +61,20 @@ class Part1Problem1(Slide, DistributionTemplate):
         self.finish_line([f1, f_eq, f2])
 
         # --- square root both sides ---
-        sqrt_line = self.reveal_term(r"x = 2 \pm \sqrt{6.5}", after=None, source=None, indicate=False)
-        self.finish_line([sqrt_line])
+        sq1 = self.reveal_term(r"\sqrt{(x-2)^2}", after=None, source=f1, color=SQUARE_COLOR)
+        sq_eq = self.reveal_term(r"=", after=sq1, indicate=False)
+        sq2 = self.reveal_term(r"\pm\sqrt{6.5}", after=sq_eq, source=f2)
+        self.finish_line([sq1, sq_eq, sq2])
+
+        # --- evaluate the square root ---
+        ev1 = self.reveal_term(r"x-2", after=None, source=sq1, indicate=False)
+        ev_eq = self.reveal_term(r"=", after=ev1, indicate=False)
+        ev2 = self.reveal_term(r"\pm 2.550", after=ev_eq, source=sq2)
+        self.finish_line([ev1, ev_eq, ev2])
+
+        # --- isolate x ---
+        iso_line = self.reveal_term(r"x = 2 \pm 2.550", after=None, source=None, indicate=False)
+        self.finish_line([iso_line])
 
         # --- decimal answer ---
         final_line = self.reveal_term(

@@ -52,7 +52,9 @@ class Part3Problem5(Slide, DistributionTemplate):
         self.finish_line([d1, d2, d_eq, d3])
 
         # --- complete the square: add (b/2)^2 = 1.5625 to both sides ---
-        sq_lhs, sq_rhs = self.write_inverse([d2, d3], r"+1.5625", color=SQUARE_COLOR)
+        sq_lhs, sq_rhs = self.write_inverse(
+            [d2, d3], r"+1.5625", color=SQUARE_COLOR, shifts=[LEFT * 0.5, RIGHT * 0.5]
+        )
         self.extend_current_line(sq_lhs, sq_rhs)
 
         f1 = self.reveal_term(r"(x+1.25)^2", after=None, source=[d1, d2, sq_lhs], color=SQUARE_COLOR)
@@ -61,12 +63,20 @@ class Part3Problem5(Slide, DistributionTemplate):
         self.finish_line([f1, f_eq, f2])
 
         # --- square root both sides ---
-        sqrt_line = self.reveal_term(r"x = -1.25 \pm \sqrt{3.0625}", after=None, source=None, indicate=False)
-        self.finish_line([sqrt_line])
+        sq1 = self.reveal_term(r"\sqrt{(x+1.25)^2}", after=None, source=f1, color=SQUARE_COLOR)
+        sq_eq = self.reveal_term(r"=", after=sq1, indicate=False)
+        sq2 = self.reveal_term(r"\pm\sqrt{3.0625}", after=sq_eq, source=f2)
+        self.finish_line([sq1, sq_eq, sq2])
 
-        # --- this sqrt happens to be exact ---
-        eval_line = self.reveal_term(r"x = -1.25 \pm 1.75", after=None, source=None, indicate=False)
-        self.finish_line([eval_line])
+        # --- evaluate the square root (this one happens to be exact) ---
+        ev1 = self.reveal_term(r"x+1.25", after=None, source=sq1, indicate=False)
+        ev_eq = self.reveal_term(r"=", after=ev1, indicate=False)
+        ev2 = self.reveal_term(r"\pm 1.75", after=ev_eq, source=sq2)
+        self.finish_line([ev1, ev_eq, ev2])
+
+        # --- isolate x ---
+        iso_line = self.reveal_term(r"x = -1.25 \pm 1.75", after=None, source=None, indicate=False)
+        self.finish_line([iso_line])
 
         # --- final answer ---
         final_line = self.reveal_term(

@@ -73,7 +73,9 @@ class Part3Problem6(Slide, DistributionTemplate, FrequencyTableTemplate):
         self.finish_line([d1, d2, d_eq, d3])
 
         # --- complete the square: add (b/2)^2 = 0.5625 to both sides ---
-        sq_lhs, sq_rhs = self.write_inverse([d2, d3], r"+0.5625", color=SQUARE_COLOR)
+        sq_lhs, sq_rhs = self.write_inverse(
+            [d2, d3], r"+0.5625", color=SQUARE_COLOR, shifts=[LEFT * 0.5, RIGHT * 0.5]
+        )
         self.extend_current_line(sq_lhs, sq_rhs)
 
         f1 = self.reveal_term(r"(x-0.75)^2", after=None, source=[d1, d2, sq_lhs], color=SQUARE_COLOR)
@@ -82,8 +84,20 @@ class Part3Problem6(Slide, DistributionTemplate, FrequencyTableTemplate):
         self.finish_line([f1, f_eq, f2])
 
         # --- square root both sides ---
-        sqrt_line = self.reveal_term(r"x = 0.75 \pm \sqrt{1.8125}", after=None, source=None, indicate=False)
-        self.finish_line([sqrt_line])
+        sq1 = self.reveal_term(r"\sqrt{(x-0.75)^2}", after=None, source=f1, color=SQUARE_COLOR)
+        sq_eq = self.reveal_term(r"=", after=sq1, indicate=False)
+        sq2 = self.reveal_term(r"\pm\sqrt{1.8125}", after=sq_eq, source=f2)
+        self.finish_line([sq1, sq_eq, sq2])
+
+        # --- evaluate the square root ---
+        ev1 = self.reveal_term(r"x-0.75", after=None, source=sq1, indicate=False)
+        ev_eq = self.reveal_term(r"=", after=ev1, indicate=False)
+        ev2 = self.reveal_term(r"\pm 1.346", after=ev_eq, source=sq2)
+        self.finish_line([ev1, ev_eq, ev2])
+
+        # --- isolate x ---
+        iso_line = self.reveal_term(r"x = 0.75 \pm 1.346", after=None, source=None, indicate=False)
+        self.finish_line([iso_line])
 
         # --- decimal answer ---
         final_line = self.reveal_term(
