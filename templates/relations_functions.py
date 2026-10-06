@@ -211,7 +211,7 @@ class RelationsFunctionsTemplate:
 
     # ---- function checks from a list of ordered pairs ----
 
-    def function_check_pairs(self, pairs, repeat_indices=None, font_size=36, anchor=UP * 1.0):
+    def function_check_pairs(self, pairs, repeat_indices=None, font_size=36, anchor=UP * 1.0, max_width=11):
         """pairs: list of (x, y). repeat_indices: (i, j) indices sharing the
         same x -> circles both x's, underlines the differing y's, and the
         verdict is NOT a function. None -> verdict is IS a function."""
@@ -225,8 +225,8 @@ class RelationsFunctionsTemplate:
             pair_mobs.append(VGroup(lp, xm, comma, ym, rp).arrange(RIGHT, buff=0.06, aligned_edge=DOWN))
 
         relation = self._bracket_row(pair_mobs, font_size)
-        if relation.width > 11:
-            relation.scale_to_fit_width(11)
+        if relation.width > max_width:
+            relation.scale_to_fit_width(max_width)
         relation.move_to(anchor)
         self.play(Write(relation))
         self.next_slide()
@@ -257,21 +257,23 @@ class RelationsFunctionsTemplate:
     # ---- mapping diagrams ----
 
     def mapping_diagram(self, domain_vals, range_vals, arrows, repeated_source=None, font_size=32,
-                         oval_width=2.0, gap=5.0):
+                         oval_width=2.0, gap=5.0, center=ORIGIN, row_buff=0.9):
         """arrows: list of (domain_val, range_val). repeated_source: a
         domain value with more than one outgoing arrow -> highlighted red,
-        verdict NOT a function. None -> verdict IS a function."""
-        left_h = max(len(domain_vals) * 0.9 + 0.6, 2.0)
-        right_h = max(len(range_vals) * 0.9 + 0.6, 2.0)
+        verdict NOT a function. None -> verdict IS a function. center: point
+        midway between the two ovals, so multiple diagrams can share a slide."""
+        left_h = max(len(domain_vals) * row_buff + 0.6, 2.0)
+        right_h = max(len(range_vals) * row_buff + 0.6, 2.0)
         left_oval = Ellipse(width=oval_width, height=left_h, color=X_COLOR)
-        left_oval.move_to(LEFT * gap / 2)
+        left_oval.move_to(center + LEFT * gap / 2)
         right_oval = Ellipse(width=oval_width, height=right_h, color=Y_COLOR)
-        right_oval.move_to(RIGHT * gap / 2)
+        right_oval.move_to(center + RIGHT * gap / 2)
         self.play(Create(left_oval), Create(right_oval))
 
-        left_pts = VGroup(*[Text(str(v), font_size=font_size) for v in domain_vals]).arrange(DOWN, buff=0.6)
+        label_buff = max(row_buff - 0.3, 0.2)
+        left_pts = VGroup(*[Text(str(v), font_size=font_size) for v in domain_vals]).arrange(DOWN, buff=label_buff)
         left_pts.move_to(left_oval.get_center())
-        right_pts = VGroup(*[Text(str(v), font_size=font_size) for v in range_vals]).arrange(DOWN, buff=0.6)
+        right_pts = VGroup(*[Text(str(v), font_size=font_size) for v in range_vals]).arrange(DOWN, buff=label_buff)
         right_pts.move_to(right_oval.get_center())
         left_labels = dict(zip(domain_vals, left_pts))
         right_labels = dict(zip(range_vals, right_pts))
@@ -364,11 +366,11 @@ class RelationsFunctionsTemplate:
         return mobs
 
     def flag_plus_minus(self, mob, tex_fragment=r"\pm", color=NOT_FUNCTION_COLOR,
-                         note="Plus or minus means NOT a function."):
+                         note="Plus or minus means NOT a function.", note_font_size=30, note_buff=0.8):
         part = mob.get_part_by_tex(tex_fragment, substring=False)
         self.play(Circumscribe(part, color=color))
-        verdict = Text(note, font_size=30, color=color, weight=BOLD)
-        verdict.next_to(mob, DOWN, buff=0.8)
+        verdict = Text(note, font_size=note_font_size, color=color, weight=BOLD)
+        verdict.next_to(mob, DOWN, buff=note_buff)
         self.play(Write(verdict))
         self.next_slide()
         return verdict

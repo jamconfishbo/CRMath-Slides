@@ -19,12 +19,16 @@ class ApplySkills1(Slide, RelationsFunctionsTemplate):
             "x", "y", x_vals, y_vals, center=UP * 1.8,
         )
 
-        prompt = Text("Your turn -- write the relation, domain, and range!",
-                       font_size=30, color=THEOREM_COLOR)
-        prompt.next_to(table, DOWN, buff=0.8)
-        self.play(FadeIn(prompt, shift=UP * 0.2))
+        instructions = VGroup(
+            Text("a) Write the set of ordered pairs that defines the relation.", font_size=26),
+            Text("b) Write the domain.", font_size=26),
+            Text("c) Write the range.", font_size=26),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.25)
+        instructions.set_color(THEOREM_COLOR)
+        instructions.next_to(table, DOWN, buff=0.7)
+        self.play(FadeIn(instructions, shift=UP * 0.2))
         self.next_slide()
-        self.play(FadeOut(prompt))
+        self.play(FadeOut(instructions))
 
         self.build_ordered_pairs(cells_a, cells_b, anchor=DOWN * 0.3, max_width=10)
         self.build_set(x_vals, "Domain", X_COLOR, anchor=DOWN * 1.6)
