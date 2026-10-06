@@ -211,10 +211,10 @@ class RelationsFunctionsTemplate:
 
     # ---- function checks from a list of ordered pairs ----
 
-    def function_check_pairs(self, pairs, repeat_indices=None, font_size=36, anchor=UP * 1.0, max_width=11):
-        """pairs: list of (x, y). repeat_indices: (i, j) indices sharing the
-        same x -> circles both x's, underlines the differing y's, and the
-        verdict is NOT a function. None -> verdict is IS a function."""
+    def write_relation_pairs(self, pairs, font_size=36, anchor=UP * 1.0, max_width=11, pause=True):
+        """Writes just the {(x, y), ...} relation (the "problem"), with no
+        verdict yet. Returns (relation, pair_mobs) -- pass both into
+        reveal_function_verdict() once students have had time to work it."""
         pair_mobs = []
         for x, y in pairs:
             lp = Text("(", font_size=font_size)
@@ -229,8 +229,14 @@ class RelationsFunctionsTemplate:
             relation.scale_to_fit_width(max_width)
         relation.move_to(anchor)
         self.play(Write(relation))
-        self.next_slide()
+        if pause:
+            self.next_slide()
+        return relation, pair_mobs
 
+    def reveal_function_verdict(self, relation, pair_mobs, repeat_indices=None):
+        """Circles the repeated x's, underlines the differing y's, and
+        writes the verdict below a relation already written by
+        write_relation_pairs(). None -> verdict is IS a function."""
         if repeat_indices is not None:
             i, j = repeat_indices
             x_i, x_j = pair_mobs[i][1], pair_mobs[j][1]
@@ -252,16 +258,26 @@ class RelationsFunctionsTemplate:
         verdict.next_to(relation, DOWN, buff=1.5 if repeat_indices else 0.9)
         self.play(Write(verdict))
         self.next_slide()
+        return verdict
+
+    def function_check_pairs(self, pairs, repeat_indices=None, font_size=36, anchor=UP * 1.0, max_width=11):
+        """pairs: list of (x, y). repeat_indices: (i, j) indices sharing the
+        same x -> circles both x's, underlines the differing y's, and the
+        verdict is NOT a function. None -> verdict is IS a function."""
+        relation, pair_mobs = self.write_relation_pairs(pairs, font_size, anchor, max_width)
+        verdict = self.reveal_function_verdict(relation, pair_mobs, repeat_indices)
         return relation, verdict
 
     # ---- mapping diagrams ----
 
     def mapping_diagram(self, domain_vals, range_vals, arrows, repeated_source=None, font_size=32,
-                         oval_width=2.0, gap=5.0, center=ORIGIN, row_buff=0.9):
+                         oval_width=2.0, gap=5.0, center=ORIGIN, row_buff=0.9, reveal_verdict=True):
         """arrows: list of (domain_val, range_val). repeated_source: a
         domain value with more than one outgoing arrow -> highlighted red,
         verdict NOT a function. None -> verdict IS a function. center: point
-        midway between the two ovals, so multiple diagrams can share a slide."""
+        midway between the two ovals, so multiple diagrams can share a slide.
+        reveal_verdict=False stops after drawing the arrows (the "problem")
+        and skips the verdict -- pair with reveal_mapping_verdict() later."""
         left_h = max(len(domain_vals) * row_buff + 0.6, 2.0)
         right_h = max(len(range_vals) * row_buff + 0.6, 2.0)
         left_oval = Ellipse(width=oval_width, height=left_h, color=X_COLOR)
@@ -291,13 +307,22 @@ class RelationsFunctionsTemplate:
             self.play(Create(arr), run_time=0.5)
         self.next_slide()
 
-        verdict = self.verdict_text(repeated_source is None)
-        verdict.next_to(VGroup(left_oval, right_oval), DOWN, buff=0.8)
+        diagram = VGroup(left_oval, right_oval, left_pts, right_pts, *arrow_mobs)
+
+        if not reveal_verdict:
+            return diagram, None
+
+        verdict = self.reveal_mapping_verdict(diagram, repeated_source is None)
+        return diagram, verdict
+
+    def reveal_mapping_verdict(self, diagram, is_function, buff=0.8):
+        """Writes the verdict below a diagram built by mapping_diagram()
+        (with reveal_verdict=False), once students have had time to work it."""
+        verdict = self.verdict_text(is_function)
+        verdict.next_to(diagram, DOWN, buff=buff)
         self.play(Write(verdict))
         self.next_slide()
-
-        diagram = VGroup(left_oval, right_oval, left_pts, right_pts, *arrow_mobs)
-        return diagram, verdict
+        return verdict
 
     # ---- rough sketches + vertical line test ----
 
@@ -346,13 +371,15 @@ class RelationsFunctionsTemplate:
 
     # ---- solving for y ----
 
-    def solve_for_y(self, equation_lines, font_size=36, anchor=UP * 1.5, line_buff=0.5):
+    def solve_for_y(self, equation_lines, font_size=36, anchor=UP * 1.5, line_buff=0.5, start_after=None):
         """equation_lines: MathTex strings, one per step, each staying
         visible below the last (running record). Isolate the final +/- with
         double braces (e.g. r"y = -1 {{\\pm}} \\sqrt{...}") so flag_plus_minus
-        can circle it afterward."""
+        can circle it afterward. start_after: an existing mobject (e.g. the
+        given equation, written separately) to stack the first new line
+        below, instead of placing it at `anchor`."""
         mobs = []
-        prev = None
+        prev = start_after
         for s in equation_lines:
             m = MathTex(s, font_size=font_size)
             if prev is None:

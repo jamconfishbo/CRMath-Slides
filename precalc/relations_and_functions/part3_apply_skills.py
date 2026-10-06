@@ -2,7 +2,7 @@ from manim import *
 from manim_slides import Slide
 
 from components.theme import BACKGROUND_COLOR, THEOREM_COLOR
-from templates.relations_functions import RelationsFunctionsTemplate, IS_FUNCTION_COLOR
+from templates.relations_functions import RelationsFunctionsTemplate, IS_FUNCTION_COLOR, NOT_FUNCTION_COLOR
 
 
 class ApplySkills3(Slide, RelationsFunctionsTemplate):
@@ -42,24 +42,27 @@ class ApplySkills3(Slide, RelationsFunctionsTemplate):
         pts_b = [(x, 0.5 * (x + 1) ** 2 - 1.5) for x in [-3, -2, -1, 0, 1, 2]]
         curve_b = self.rough_curve(axes_b, pts_b, color=BLUE)
 
-        # c) two disjoint rays: IS a function
-        piece1 = self.rough_curve(axes_c, [(-3, 3), (-1, 1.5)], color=BLUE)
-        dot1 = self.endpoint_dot(axes_c, (-1, 1.5), closed=True, color=BLUE)
-        piece2 = self.rough_curve(axes_c, [(0, 0.5), (3, -2.5)], color=BLUE)
-        dot2 = self.endpoint_dot(axes_c, (0, 0.5), closed=False, color=BLUE)
-        curve_c = VGroup(piece1, dot1, piece2, dot2)
+        # c) two crossing lines (an "X"): NOT a function -- for x = 1.3, the
+        # two lines give two different y's, marked with filled dots
+        line1 = Line(axes_c.c2p(-2.5, -2.5), axes_c.c2p(2.5, 2.5), color=BLUE, stroke_width=4)
+        line2 = Line(axes_c.c2p(-2.5, 2.5), axes_c.c2p(2.5, -2.5), color=BLUE, stroke_width=4)
+        curve_c = VGroup(line1, line2)
 
         self.play(Create(curve_a), Create(curve_b), Create(curve_c))
         self.next_slide()
 
         vline_a = DashedLine(axes_a.c2p(-1, -3), axes_a.c2p(-1, 3), color=IS_FUNCTION_COLOR, stroke_width=3)
         vline_b = DashedLine(axes_b.c2p(1, -3), axes_b.c2p(1, 3), color=IS_FUNCTION_COLOR, stroke_width=3)
-        vline_c = DashedLine(axes_c.c2p(1, -3), axes_c.c2p(1, 3), color=IS_FUNCTION_COLOR, stroke_width=3)
+        vline_c = DashedLine(axes_c.c2p(1.3, -3), axes_c.c2p(1.3, 3), color=NOT_FUNCTION_COLOR, stroke_width=3)
         self.play(Create(vline_a), Create(vline_b), Create(vline_c))
+
+        dot_c1 = self.endpoint_dot(axes_c, (1.3, 1.3), closed=True, color=NOT_FUNCTION_COLOR, radius=0.08)
+        dot_c2 = self.endpoint_dot(axes_c, (1.3, -1.3), closed=True, color=NOT_FUNCTION_COLOR, radius=0.08)
+        self.play(FadeIn(dot_c1), FadeIn(dot_c2))
         self.next_slide()
 
         verdict_a = self.verdict_text(True, font_size=22).next_to(axes_a, DOWN, buff=0.3)
         verdict_b = self.verdict_text(True, font_size=22).next_to(axes_b, DOWN, buff=0.3)
-        verdict_c = self.verdict_text(True, font_size=22).next_to(axes_c, DOWN, buff=0.3)
+        verdict_c = self.verdict_text(False, font_size=22).next_to(axes_c, DOWN, buff=0.3)
         self.play(Write(verdict_a), Write(verdict_b), Write(verdict_c))
         self.next_slide()
