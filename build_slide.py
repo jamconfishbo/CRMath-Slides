@@ -41,7 +41,7 @@ def main():
     env["PYTHONPATH"] = str(REPO_ROOT) + os.pathsep + env.get("PYTHONPATH", "")
 
     render_cmd = [
-        "manim-slides", "render", f"-q{args.quality}",
+        "manim-slides", "render", "-q", args.quality,
         scene_path.name, args.scene,
     ]
     subprocess.run(render_cmd, cwd=slide_dir, env=env, check=True)
