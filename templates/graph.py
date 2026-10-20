@@ -49,6 +49,34 @@ class GraphTemplate:
         self.play(Create(plane), FadeIn(labels))
         return plane
 
+    def show_data_plane(self, x_range, y_range, x_numbers, y_numbers, x_label, y_label,
+                        x_length=7.4, y_length=5.4, center=ORIGIN, y_suffix="", y_number_colors=None,
+                        label_font_size=24):
+        """NumberPlane for real-world data: x_range / y_range are [min, max,
+        grid step], x_numbers / y_numbers are the values to label (y_suffix,
+        e.g. "\\%", is appended to each y label; y_number_colors optionally
+        maps a y value to its label color). Axis titles sit outside the tick
+        labels -- the y title rotated along the axis."""
+        plane = NumberPlane(
+            x_range=x_range, y_range=y_range, x_length=x_length, y_length=y_length,
+            background_line_style={"stroke_color": GRID_COLOR, "stroke_width": 1, "stroke_opacity": 0.5},
+            axis_config={"color": AXIS_COLOR, "include_numbers": False, "include_tip": False},
+        ).move_to(center)
+        y_number_colors = y_number_colors or {}
+        x_nums = VGroup(*[
+            MathTex(f"{x:g}", font_size=label_font_size).next_to(plane.c2p(x, y_range[0]), DOWN, buff=0.15)
+            for x in x_numbers
+        ])
+        y_nums = VGroup(*[
+            MathTex(f"{y:g}{y_suffix}", font_size=label_font_size, color=y_number_colors.get(y, WHITE))
+            .next_to(plane.c2p(x_range[0], y), LEFT, buff=0.15)
+            for y in y_numbers
+        ])
+        x_title = Text(x_label, font_size=label_font_size).next_to(x_nums, DOWN, buff=0.15)
+        y_title = Text(y_label, font_size=label_font_size).rotate(PI / 2).next_to(y_nums, LEFT, buff=0.2)
+        self.play(Create(plane), FadeIn(x_nums), FadeIn(y_nums), FadeIn(x_title), FadeIn(y_title))
+        return plane, VGroup(x_nums, y_nums, x_title, y_title)
+
     def plot_clipped(self, plane, f, color, stroke_width=5):
         """Plot f only where it stays inside the visible y-range."""
         x0, x1 = plane.x_range[:2]
