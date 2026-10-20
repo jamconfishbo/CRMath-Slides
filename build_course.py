@@ -32,6 +32,11 @@ def main():
     parser.add_argument(
         "--to", default="html", help="Output format passed to manim-slides convert (default: html)"
     )
+    parser.add_argument(
+        "--split", action="store_true",
+        help="Write the videos to a <name>_assets/ folder beside the page instead of embedding "
+             "them in one file (needed once a deck passes GitHub's 100 MB file limit, e.g. HD renders)",
+    )
     args = parser.parse_args()
 
     slide_dir = (REPO_ROOT / args.slide_dir).resolve()
@@ -46,8 +51,10 @@ def main():
 
     convert_cmd = [
         "manim-slides", "convert", *args.scenes, str(out_path),
-        "--to", args.to, "--one-file",
+        "--to", args.to,
     ]
+    if not args.split:
+        convert_cmd.append("--one-file")
     subprocess.run(convert_cmd, cwd=slide_dir, check=True)
     print(f"Combined presentation written to {out_path}")
 
