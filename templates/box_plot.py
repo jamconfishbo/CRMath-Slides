@@ -35,12 +35,15 @@ TABLE_COL_X = [-6.0, -3.6, -2.25, -0.9, 0.45, 1.8, 3.15, 4.5, 5.85]
 TABLE_TOP_Y = 0.35
 TABLE_TOP_Y_WITH_GRAPH = 2.85
 TABLE_WORK_Y = -2.6
+TABLE_TOP_Y_UNDER_GRAPH = -0.75
+TABLE_WORK_Y_UNDER_GRAPH = -3.25
 HEADERS = ["", "Min", "Q1", "Median", "Q3", "Max", "IQR", "Range"]
 
 PLOT_Y = [2.2, 0.9]     # plane y of the first / second box plot
 BOX_HALF_H = 0.28
 GRAPH_SCALE_TOP = 0.75
 GRAPH_CENTER_TOP = np.array([0.75, 1.6, 0])
+QUESTION_TOP_Y = -0.5
 
 
 def fmt(v):
@@ -57,12 +60,29 @@ def middle_indices(lo, hi):
     return [lo + n // 2] if n % 2 else [lo + n // 2 - 1, lo + n // 2]
 
 
-class DataSet:
+class FiveNumbers:
+    """A five-number summary, e.g. one read off a given box plot."""
+
+    def __init__(self, name, minimum, q1, median, q3, maximum):
+        self.name = name
+        self.min = minimum
+        self.q1 = q1
+        self.median = median
+        self.q3 = q3
+        self.max = maximum
+        self.iqr = q3 - q1
+        self.range = maximum - minimum
+
+    @property
+    def table_row(self):
+        return [self.min, self.q1, self.median, self.q3, self.max, self.iqr, self.range]
+
+
+class DataSet(FiveNumbers):
     """One data set and everything computed from it. Split rule: an odd count
     leaves the median out of both halves; an even count splits exactly in half."""
 
     def __init__(self, name, raw):
-        self.name = name
         self.raw = raw
         self.sorted = sorted(raw)
         self.n = len(raw)
@@ -72,13 +92,8 @@ class DataSet:
         self.upper = (self.n - half, self.n - 1)
         self.q1_idx = middle_indices(*self.lower)
         self.q3_idx = middle_indices(*self.upper)
-        self.min = self.sorted[0]
-        self.max = self.sorted[-1]
-        self.median = self._average(self.median_idx)
-        self.q1 = self._average(self.q1_idx)
-        self.q3 = self._average(self.q3_idx)
-        self.iqr = self.q3 - self.q1
-        self.range = self.max - self.min
+        super().__init__(name, self.sorted[0], self._average(self.q1_idx), self._average(self.median_idx),
+                         self._average(self.q3_idx), self.sorted[-1])
 
     def _average(self, idx):
         return sum(self.sorted[i] for i in idx) / len(idx)
@@ -86,10 +101,6 @@ class DataSet:
     @property
     def is_even(self):
         return self.n % 2 == 0
-
-    @property
-    def table_row(self):
-        return [self.min, self.q1, self.median, self.q3, self.max, self.iqr, self.range]
 
 
 class OrderedRow:
@@ -173,9 +184,16 @@ class BoxPlotTemplate(CumulativeFrequencyTemplate, MeanMedianTemplate, GraphTemp
     spec: {"context": str, "data": [(name, raw values, raw-table label), x2],
            "x_range": [min, max, 1], "x_numbers": [...], "x_label": str,
            "questions": [{"prompt", "answer", "show", "follow", "explain"}, ...]}
+    A problem that starts from given box plots uses "summaries" in place of
+    "data" and run_read_table() in place of the ordering / Step 2 / table scenes;
+    see run_percents() for its "percents" questions.
     """
 
     def data_sets(self, spec):
+        """spec["data"] holds raw data to work from; spec["summaries"] holds
+        (name, min, Q1, median, Q3, max) read off a given box plot."""
+        if "summaries" in spec:
+            return [FiveNumbers(*row) for row in spec["summaries"]]
         return [DataSet(name, raw) for name, raw, _ in spec["data"]]
 
     def use_heading(self, text, animate=True):
@@ -461,8 +479,7 @@ class BoxPlotTemplate(CumulativeFrequencyTemplate, MeanMedianTemplate, GraphTemp
             self.place_value(table, r, 5, fmt(d.max), source=max_tag, color=WHITE)
             self.next_slide()
 
-            self.table_subtraction(table, r, d, 6, "IQR = Q3 - Q1:", (d.q3, Q3_COLOR, 4), (d.q1, Q1_COLOR, 2), d.iqr)
-            self.table_subtraction(table, r, d, 7, "Range = Max - Min:", (d.max, WHITE, 5), (d.min, WHITE, 1), d.range)
+            self.fill_iqr_and_range(table, r, d, TABLE_WORK_Y)
 
         self.play(
             FadeOut(heading), FadeOut(tags),
@@ -471,14 +488,18 @@ class BoxPlotTemplate(CumulativeFrequencyTemplate, MeanMedianTemplate, GraphTemp
             table.group.animate.shift(UP * (TABLE_TOP_Y_WITH_GRAPH - TABLE_TOP_Y)),
         )
 
-    def table_subtraction(self, table, r, d, col, label, big, small, result):
+    def fill_iqr_and_range(self, table, r, d, y):
+        self.table_subtraction(table, r, d, 6, "IQR = Q3 - Q1:", (d.q3, Q3_COLOR, 4), (d.q1, Q1_COLOR, 2), d.iqr, y)
+        self.table_subtraction(table, r, d, 7, "Range = Max - Min:", (d.max, WHITE, 5), (d.min, WHITE, 1), d.range, y)
+
+    def table_subtraction(self, table, r, d, col, label, big, small, result, y):
         """click 1: highlight the two source cells + "big - small"
         click 2: "= result" (boxed)    click 3: result copied into the table"""
         hl = VGroup(table.cell_rect(r, big[2], big[1], opacity=0.3), table.cell_rect(r, small[2], small[1], opacity=0.3))
         lbl, line = self.work_row(
             f"{d.name}   {label}",
             [(fmt(big[0]), big[1]), ("-", WHITE), (fmt(small[0]), small[1]), ("=", WHITE), (fmt(result), WHITE)],
-            y=TABLE_WORK_Y,
+            y=y,
         )
         self.play(FadeIn(hl), FadeIn(lbl), FadeIn(line[:3]))
         self.next_slide()
@@ -562,15 +583,20 @@ class BoxPlotTemplate(CumulativeFrequencyTemplate, MeanMedianTemplate, GraphTemp
 
     # ---- Step 5: interpret ------------------------------------------------
 
-    def graph_top(self, spec, data):
-        """The finished graph at its Step 5 spot. Returns (plane, all parts by data set)."""
+    def graph_top(self, spec, data, show_values=True):
+        """The finished graph at its spot above the questions. Returns (plane,
+        all parts by data set). show_values=False leaves the value labels off
+        screen, still in position, for students to read off the plot first."""
         plane, graph = self.graph_base(spec, data, animate=False)
         all_parts = [self.plot_parts(plane, d, y, c) for d, y, c in zip(data, PLOT_Y, PLAYER_COLORS)]
-        everything = VGroup(graph)
+        drawn, values = VGroup(graph), VGroup()
         for parts in all_parts:
-            everything.add(parts["box"], parts["whiskers"], *parts["ticks"], *parts["values"])
-        everything.scale(GRAPH_SCALE_TOP).move_to(GRAPH_CENTER_TOP)
-        self.add(everything)
+            drawn.add(parts["box"], parts["whiskers"], *parts["ticks"])
+            values.add(*parts["values"])
+        VGroup(drawn, values).scale(GRAPH_SCALE_TOP).move_to(GRAPH_CENTER_TOP)
+        self.add(drawn)
+        if show_values:
+            self.add(values)
         return plane, all_parts
 
     def span_note(self, plane, x0, x1, y, text):
@@ -602,7 +628,7 @@ class BoxPlotTemplate(CumulativeFrequencyTemplate, MeanMedianTemplate, GraphTemp
         self.camera.background_color = BACKGROUND_COLOR
         data = self.data_sets(spec)
         plane, all_parts = self.graph_top(spec, data)
-        heading = self.use_heading("Step 5: Compare the data sets.")
+        heading = self.use_heading(spec.get("compare_heading", "Step 5: Compare the data sets."))
         self.next_slide()
 
         for number, q in enumerate(spec["questions"]):
@@ -611,18 +637,24 @@ class BoxPlotTemplate(CumulativeFrequencyTemplate, MeanMedianTemplate, GraphTemp
             self.play(FadeIn(prompt))
             self.next_slide()
 
-            answer = Text(q["answer"], font_size=30, weight=BOLD, color=ANSWER_COLOR)
-            if "\n" in q["prompt"]:
-                answer.next_to(prompt, DOWN, buff=0.3).align_to(prompt, LEFT).shift(RIGHT * 0.12)
-            else:
-                answer.next_to(prompt, RIGHT, buff=0.45, aligned_edge=DOWN)
-            box = SurroundingRectangle(answer, color=ANSWER_COLOR, buff=0.12)
             callout = self.graph_callout(plane, data, all_parts, q.get("show"))
-            self.play(FadeIn(answer), Create(box), FadeIn(callout))
+            shown = VGroup(prompt, callout)
+            below = prompt
+            if q.get("answer"):
+                answer = Text(q["answer"], font_size=30, weight=BOLD, color=ANSWER_COLOR)
+                if "\n" in q["prompt"]:
+                    answer.next_to(prompt, DOWN, buff=0.3).align_to(prompt, LEFT).shift(RIGHT * 0.12)
+                else:
+                    answer.next_to(prompt, RIGHT, buff=0.45, aligned_edge=DOWN)
+                box = SurroundingRectangle(answer, color=ANSWER_COLOR, buff=0.12)
+                self.play(FadeIn(answer), Create(box), FadeIn(callout))
+                shown.add(answer, box)
+                if "\n" in q["prompt"]:
+                    below = box
+            else:
+                self.play(FadeIn(callout))
             self.next_slide()
 
-            shown = VGroup(prompt, answer, box, callout)
-            below = box if "\n" in q["prompt"] else prompt
             if q.get("follow"):
                 follow = Text(q["follow"], font_size=30)
                 follow.next_to(prompt, DOWN, buff=0.4).align_to(prompt, LEFT)
@@ -637,4 +669,106 @@ class BoxPlotTemplate(CumulativeFrequencyTemplate, MeanMedianTemplate, GraphTemp
             self.next_slide()
             shown.add(explain)
             if number < len(spec["questions"]) - 1:
+                self.play(FadeOut(shown))
+
+    # ---- reading given box plots ------------------------------------------
+
+    def run_read_table(self, spec):
+        """Given plots with no value labels: read each value down to the number
+        line and into the table, then work out IQR and range."""
+        self.camera.background_color = BACKGROUND_COLOR
+        data = self.data_sets(spec)
+        heading = self.use_heading(spec["heading"])
+        plane, all_parts = self.graph_top(spec, data, show_values=False)
+        context = Text(spec["context"], font_size=BODY_FONT_SIZE, line_spacing=0.9)
+        context.move_to([0, -1.6, 0])
+        self.play(FadeIn(context))
+        self.next_slide()
+
+        table = self.summary_grid(data, TABLE_TOP_Y_UNDER_GRAPH, filled=False)
+        new_heading = Text("Fill in the table using the box plots.", font_size=HEADING_FONT_SIZE, weight=BOLD)
+        new_heading.move_to(heading)
+        self.play(FadeOut(context), FadeIn(table.group), Transform(heading, new_heading))
+        self.next_slide()
+
+        colors = [WHITE, Q1_COLOR, MEDIAN_COLOR, Q3_COLOR, WHITE]
+        for r, (d, y, parts) in enumerate(zip(data, PLOT_Y, all_parts)):
+            for k, (x, color) in enumerate(zip(d.table_row[:5], colors)):
+                drop = DashedLine(plane.c2p(x, y - BOX_HALF_H), plane.c2p(x, 0), color=color, stroke_width=4)
+                self.play(Create(drop), FadeIn(parts["values"][k]), run_time=0.6)
+                self.place_value(table, r, k + 1, fmt(x), source=parts["values"][k], color=color)
+                self.next_slide()
+                self.play(FadeOut(drop), run_time=0.2)
+            self.fill_iqr_and_range(table, r, d, TABLE_WORK_Y_UNDER_GRAPH)
+
+        self.play(FadeOut(table.group), FadeOut(heading))
+
+    # ---- percents ---------------------------------------------------------
+
+    def graph_mark(self, plane, callout):
+        """("span", row, x0, x1, label): arrow under a plot.
+        ("mark", row, x, label or None): yellow line at x on a plot."""
+        if callout[0] == "span":
+            _, row, x0, x1, label = callout
+            return self.span_note(plane, x0, x1, PLOT_Y[row], label)
+        _, row, x, label = callout
+        y = PLOT_Y[row]
+        mark = VGroup(Line(plane.c2p(x, y - BOX_HALF_H - 0.1), plane.c2p(x, y + BOX_HALF_H + 0.1),
+                           color=ANSWER_COLOR, stroke_width=6))
+        if label:
+            mark.add(Text(label, font_size=22, color=ANSWER_COLOR).next_to(mark[0], UP, buff=0.04))
+        return mark
+
+    def question_rows(self, rows):
+        """rows: one list per line, each entry a string or a blank
+        {"tex", "callouts"}. Returns (group, [(box, blank), ...] in order)."""
+        lines, blanks = VGroup(), []
+        for row in rows:
+            line = VGroup()
+            for entry in row:
+                if isinstance(entry, str):
+                    line.add(Text(entry, font_size=30))
+                else:
+                    width = MathTex(entry["tex"], font_size=BOX_FONT_SIZE).width + 0.35
+                    box = self.answer_box(max(width, 1.15))
+                    line.add(box)
+                    blanks.append((box, entry))
+            lines.add(line.arrange(RIGHT, buff=0.18))
+        lines.arrange(DOWN, aligned_edge=LEFT, buff=0.2)
+        lines.move_to([BLOCK_LEFT, QUESTION_TOP_Y, 0], aligned_edge=UL)
+        return lines, blanks
+
+    def run_percents(self, spec):
+        """Plots stay up top. Each question appears with empty answer boxes;
+        one click per box fills it and marks the matching part of the plot."""
+        self.camera.background_color = BACKGROUND_COLOR
+        data = self.data_sets(spec)
+        plane, _ = self.graph_top(spec, data)
+        self.use_heading(spec["percents_heading"])
+        reminder = Text(spec["percents_reminder"], font_size=30, line_spacing=0.9)
+        reminder.move_to([0, -1.6, 0])
+        self.play(FadeIn(reminder))
+        self.next_slide()
+        self.play(FadeOut(reminder))
+
+        for number, q in enumerate(spec["percents"]):
+            lines, blanks = self.question_rows(q["rows"])
+            self.play(FadeIn(lines))
+            self.next_slide()
+
+            shown = VGroup(lines)
+            for box, entry in blanks:
+                fill, value = self.fill(box, entry["tex"], ANSWER_COLOR)
+                marks = VGroup(*[self.graph_mark(plane, c) for c in entry.get("callouts", [])])
+                self.play(*fill, FadeIn(marks))
+                self.next_slide()
+                shown.add(value, marks)
+
+            if q.get("explain"):
+                explain = Text(q["explain"], font_size=30, line_spacing=0.9, color=ANSWER_COLOR)
+                explain.next_to(lines, DOWN, buff=0.28).align_to(lines, LEFT)
+                self.play(FadeIn(explain, shift=UP * 0.15))
+                self.next_slide()
+                shown.add(explain)
+            if number < len(spec["percents"]) - 1:
                 self.play(FadeOut(shown))
