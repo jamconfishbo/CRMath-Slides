@@ -630,5 +630,55 @@
         }
       );
     </script>
-  </body>
+  
+<style>
+  #steady-frame {
+    position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10;
+    object-fit: contain; display: none;
+  }
+</style>
+<script>
+  (function () {
+    var still = document.createElement("canvas");
+    still.id = "steady-frame";
+    document.querySelector(".reveal .backgrounds").appendChild(still);
+    var change = 0;
+
+    function videoOf(slide) {
+      var background = slide && Reveal.getSlideBackground(slide);
+      return background && background.querySelector("video");
+    }
+
+    Reveal.on("slidechanged", function (event) {
+      var thisChange = ++change;
+      var outgoing = videoOf(event.previousSlide);
+      var incoming = videoOf(event.currentSlide);
+      if (outgoing && outgoing.readyState >= 2) {
+        still.width = outgoing.videoWidth;
+        still.height = outgoing.videoHeight;
+        still.getContext("2d").drawImage(outgoing, 0, 0);
+        still.style.display = "block";
+      }
+      if (!incoming) { still.style.display = "none"; return; }
+
+      function reveal() {
+        if (thisChange === change) still.style.display = "none";
+      }
+      setTimeout(reveal, 1500);
+      if (incoming.requestVideoFrameCallback) {
+        incoming.requestVideoFrameCallback(function check(now, frame) {
+          if (thisChange !== change) return;
+          if (frame.mediaTime < 0.25) {
+            requestAnimationFrame(function () { requestAnimationFrame(reveal); });
+          } else {
+            incoming.requestVideoFrameCallback(check);
+          }
+        });
+      } else {
+        incoming.addEventListener("playing", reveal, { once: true });
+      }
+    });
+  })();
+</script>
+</body>
 </html>
